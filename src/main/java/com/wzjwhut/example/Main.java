@@ -26,8 +26,8 @@ public class Main {
         logger.info("matrix T\r\n{}", HexUtils.dumpByteTable(MyAES.matrixT(matrix, null)));
         logger.info("sub\r\n{}", HexUtils.dumpByteTable(MyAES.subBytes(matrix, null)));
 
-        logger.info("{}, {}, {}, {}", Integer.toHexString(MyAES.rcon(1)), Integer.toHexString(MyAES.rcon(5)),
-                Integer.toHexString(MyAES.rcon(9)),
+        logger.info("{}, {}, {}, {}", Integer.toHexString(MyAES.rcon(1)), Integer.toHexString(MyAES.rcon(3)),
+                Integer.toHexString(MyAES.rcon(3)),
                         Integer.toHexString(MyAES.rcon(10)));
 
         /** https://ws680.nist.gov/publication/get_pdf.cfm?pub_id=51031 */

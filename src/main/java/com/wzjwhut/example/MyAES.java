@@ -43,7 +43,7 @@ public class MyAES {
                 sbox[i][j] = Integer.parseInt(cols[j], 16);
             }
         }
-        logger.info("sbox\r\n{}", HexUtils.dumpByteTable(sbox));
+        //logger.info("sbox\r\n{}", HexUtils.dumpByteTable(sbox));
     }
 
     final int NR = 10;
@@ -51,7 +51,7 @@ public class MyAES {
 
     }
 
-
+    /** 这是一套完成的AES128加密过程 */
     public byte[] encrypt(byte[] key, byte[] input){
         if(input.length > 16 || key.length > 16){
             throw new RuntimeException("暂不支持超过16字节的数据");
@@ -67,7 +67,7 @@ public class MyAES {
         final int[][] W  = new int[4*(NR+1)][4];
         int index;
 
-        /** 1. 初始化state, 用输入的数据装入state, 从上到下, 从左到右 */
+        /** 1. 初始化state, 用输入的数据装入s表, 从上到下, 从左到右 */
         index = 0;
         for(int col=0; col<4; col++){
             for(int row=0; row<4; row++){
@@ -83,14 +83,17 @@ public class MyAES {
                 W[row][col] = key[index++]&0xff;
             }
         }
-        logger.info("w\r\n{}", HexUtils.dumpByteTable(W));
-        /** 生成所有的w */
+        //logger.info("w\r\n{}", HexUtils.dumpByteTable(W));
+        /** 生成所有的w4, w5, ....., w(4*(NR+1)-1 */
         keySchedule(W);
-        logger.info("w\r\n{}", HexUtils.dumpByteTable(W));
+
+        //logger.info("w\r\n{}", HexUtils.dumpByteTable(W));
 
         /** addRoundKey(s, w),  即s按列与w异或*/
         int[][] tempW = new int[4][4];
         addRoundKey(s, getw(W, 0, tempW));
+
+
         logger.info("s\r\n{}", HexUtils.dumpByteTable(s));
         for(int i=1;  i<=NR-1; i++){
             subBytes(s, s);
@@ -105,11 +108,12 @@ public class MyAES {
         logger.info("shiftRows\r\n{}", HexUtils.dumpByteTable(s));
         addRoundKey(s, getw(W, NR, tempW));
         logger.info("addRoundKey\r\n{}", HexUtils.dumpByteTable(s));
+
+        /** 最后的s表, 就是密文, 也是按照从上到下, 从左到右的方式拷贝出去 */
         byte[] cipherText = new byte[16];
         index = 0;
         for(int col=0; col<4; col++){
         for(int row=0; row<4; row++){
-
                 cipherText[index++] = (byte) (s[row][col]);
             }
         }
@@ -120,14 +124,10 @@ public class MyAES {
     private int[][] getw(int[][] W, int i, int[][] out){
         int index =  i*4;
         int[][] in = new int[][]{W[index], W[index+1], W[index+2], W[index+3]};
-//        for(int row=0; row<4; row++){
-//            for(int col=0; col<4; col++){
-//                out[row][col] = W[srcRow + col][row];
-//            }
-//        }
         return matrixT(in, out);
     }
 
+    /** 矩阵转置, 即右上角与左下角翻转. 本代码中的w是按行存储的, 使用的时候需要转置 */
     public static int[][] matrixT(int[][] in, int[][] out){
         int maxRows = in.length;
         int maxCols = in[0].length;
@@ -162,6 +162,7 @@ public class MyAES {
         }
     }
 
+    /** 循环左移一个位置 */
     private int[] shiftColumn(int[] w, int[] out){
         out[0] = w[1];
         out[1] = w[2];
@@ -170,6 +171,7 @@ public class MyAES {
         return out;
     }
 
+    /** 使用SBOX来替换s中的值*/
     public static int[][] subBytes(int[][] s, int[][] out){
         int maxRows = s.length;
         int maxCols = s[0].length;
@@ -245,6 +247,7 @@ public class MyAES {
         copyTo(temp, s);
     }
 
+    /** 执行GF(2^8)中定义的乘法操作 */
     public static int GF256Multiplication(int a, int b){
         /** GF256乘法运算, 参考方法https://en.wikipedia.org/wiki/Finite_field_arithmetic#Rijndael.27s_finite_field */
         int p = 0; /* the product of the multiplication */
@@ -261,6 +264,7 @@ public class MyAES {
         return p;
     }
 
+    /** https://en.wikipedia.org/wiki/Rijndael_key_schedule */
     public static int rcon(int i){
         if(i==1){
             return 1;
@@ -274,6 +278,7 @@ public class MyAES {
             logger.error("invalid i: {}", i);
             return 0;
         }
+        //return ((1<<(i-1)) ^ 0x11B)&0xFF;
     }
 
 
